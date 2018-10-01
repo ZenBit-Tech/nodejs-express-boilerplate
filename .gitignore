@@ -1,0 +1,8 @@
+# Logs
+/Logs
+/Logs/out
+
+# Modules
+/node_modules
+package-lock.json
+/.history
