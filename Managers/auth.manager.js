@@ -1,22 +1,67 @@
-const bcrypt = require('bcrypt')
+const UserManager = require('./user.manager')
+const SessionManager = require('./session.manager')
 
-const { SALT_WORK_FACTOR } = process.env
+const _ = require('lodash')
 
-const encryptPassword = password =>
-  new Promise((resolve, reject) => {
-    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
-      if (err) return reject(err)
+class AuthManager {
+  static async loginWithEmailPassword(email, password, done) {
+    try {
+      const user = await UserManager.findByEmail(email)
 
-      // hash the password using our new salt
-      bcrypt.hash(password, salt, function(err, hash) {
-        if (err) return reject(err)
+      if (!user)
+        return done(400, {
+          message: 'User doesn`t exist',
+          userMessage: 'Such user doesn`t exist'
+        })
 
-        // override the cleartext password with the hashed one
-        resolve(hash)
+      if (user.password === '' && user.registrationType !== 'local') {
+        return done(400, {
+          message: 'Sign in with social',
+          userMessage: 'Sign in with ' + _.capitalize(user.registrationType)
+        })
+      }
+
+      if (!user.comparePassword(password))
+        return done(400, {
+          message: 'Invalid password',
+          userMessage: 'Invalid password'
+        })
+
+      const { session, refreshToken } = await SessionManager.createSession(user)
+
+      done(200, {
+        user: user.omitFields(),
+        session: session.lean(),
+        refreshToken
       })
-    })
-  })
+    } catch (err) {
+      throw Error(err)
+    }
+  }
 
-module.exports = {
-  encryptPassword
+  static async registerByEmailPassword(newUserData, done) {
+    try {
+      const newUser = await UserManager.createUser(newUserData)
+
+      if (newUser.error) {
+        done(400, { error: newUser.error })
+
+        return
+      }
+
+      const { session, refreshToken } = await SessionManager.createSession(
+        newUser
+      )
+
+      done(200, {
+        user: newUser.omitFields(),
+        session: session,
+        refreshToken
+      })
+    } catch (err) {
+      throw Error(err)
+    }
+  }
 }
+
+module.exports = AuthManager

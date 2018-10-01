@@ -1,41 +1,63 @@
+const PassportLib = require('./Libs/passport')
+
 const routes = {
-  root: {
-    handler: 'Handlers/hello',
-    middleware: [],
-    events: {
-      http: {
-        path: '/',
-        method: 'get'
-      }
-    }
-  },
   rootPost: {
     handler: 'Handlers/hello',
     middlewares: [],
     events: {
       http: {
-        path: '/',
+        path: '/api/v1/',
         method: 'post'
       }
     }
   },
   login: {
-    handler: 'Handlers/hello',
+    handler: 'Handlers/auth/login',
     middlewares: [],
     events: {
       http: {
-        path: '/auth/login',
-        method: 'post'
+        path: '/api/v1/auth/login',
+        method: 'POST'
       }
     }
   },
-  getUsers: {
-    handler: 'Handlers/hello',
+  googleAuth: {
+    handler: PassportLib.authGoogleMiddleware,
     middlewares: [],
     events: {
       http: {
-        path: '/users',
-        method: 'get'
+        path: '/api/v1/auth/google',
+        method: 'GET'
+      }
+    }
+  },
+  googleAuthCallback: {
+    handler: 'Handlers/auth/googleCallback',
+    middlewares: [],
+    events: {
+      http: {
+        path: '/api/v1/auth/google/callback',
+        method: 'GET'
+      }
+    }
+  },
+  linkedinAuth: {
+    handler: PassportLib.linkedinAuthMiddleware,
+    middlewares: [],
+    events: {
+      http: {
+        path: '/api/v1/auth/linkedin',
+        method: 'GET'
+      }
+    }
+  },
+  linkedinAuthCallback: {
+    handler: 'Handlers/auth/linkedinCallback',
+    middlewares: [],
+    events: {
+      http: {
+        path: '/api/v1/auth/linkedin/callback',
+        method: 'GET'
       }
     }
   },

@@ -1,8 +1,8 @@
 # Logs
-/Logs
-/Logs/out
+/Logs/
 
 # Modules
 /node_modules
 package-lock.json
-/.history
+
+.history/

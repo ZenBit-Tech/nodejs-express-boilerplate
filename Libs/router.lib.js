@@ -18,15 +18,22 @@ const setupRoutes = (app, routes) => {
     try {
       const { events, handler, middleware } = route
 
-      const handlerPath = path.join(appDir, handler)
+      const additionalProps = []
 
-      const handlerFunc = require(handlerPath)
+      if (_.isString(handler)) {
+        const handlerPath = path.join(appDir, handler)
+        const handlerFunc = require(handlerPath)
+
+        additionalProps.push(handlerFunc)
+      } else if (_.isFunction(handler)) {
+        additionalProps.push(handler)
+      }
 
       if (_.isObject(events.http)) {
         const method = events.http.method.toLowerCase()
         const middlewareArr = middleware || []
 
-        app[method](events.http.path, ...middlewareArr, handlerFunc)
+        app[method](events.http.path, ...middlewareArr, ...additionalProps)
         routesAvaliable.push({
           function: key,
           method: events.http.method.toUpperCase(),

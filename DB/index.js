@@ -1,24 +1,11 @@
-const mysql = require('mysql')
-const config = require('../Config/db')
+const { DEFAULT_DB } = process.env
 
-let connection = mysql.createConnection(config)
- const createDBConnection = () => {
-  connection = mysql.createConnection(config)
+const mongodb = require('./mongoDB')
+const mysql = require('./mySQL')
 
-  connection.connect(err => {
-    if (err) return logger.error('connect to DB error: ', err)
-
-    logger.info('connected to DB ', connection.config.host, '\n')
-  })
-
-  connection.on('error', function(err) {
-    logger.error(`[ERROR]: DB \n ,`, err)
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-      createDBConnection()
-    } else {
-      throw err
-    }
-  })
+module.exports = {
+  default: DEFAULT_DB === 'mongodb' ? mongodb : mysql,
+  mongodb,
+  mysql
 }
 
-export default connection

@@ -1,101 +1,69 @@
 /* eslint-disable no-console */
+
+// const _ = require('lodash')
+// const moment = require('moment')
+const loggerLib = require('tracer')
 const colors = require('colors')
 
-const _ = require('lodash')
-const moment = require('moment')
-
-const fs = require('fs')
 const path = require('path')
 const appDir = path.dirname(require.main.filename)
 
-const logger = {}
-
-colors.setTheme({
-  info: ['blue'],
-  warn: ['yellow'],
-  error: ['red'],
-  debug: ['white'],
-  event: ['green']
+const fileLogger = loggerLib.dailyfile({
+  format: '[{{timestamp}}]: <{{title}}> {{message}}',
+  dateformat: 'dd-mm-yy HH:MM',
+  root: path.join(appDir, 'Logs')
+  // maxLogFiles: 10
 })
 
-const getString = rows => {
-  let text = ``
-
-  for (let i = 0; i < rows.length; i++) {
-    try {
-      const row = rows[i]
-
-      if (_.isObject(row)) {
-        text += JSON.stringify(row) + ' '
-
-        if (row.stack) {
-          text += `${row.stack} `
-        }
-      } else {
-        text += row.toString() + ` `
-      }
-    } catch (err) {
-      console.log('[ERROR]: logger \n', err)
-    }
+const consoleLogger = loggerLib.colorConsole({
+  format: '[{{timestamp}}]: <{{title}}> {{message}}',
+  dateformat: 'dd-mm-yy HH:MM',
+  methods: ['event', 'trace', 'debug', 'info', 'warn', 'error'],
+  filters: {
+    //log : colors.black,
+    event: colors.green,
+    trace: colors.magenta,
+    debug: colors.white,
+    info: colors.blue,
+    warn: colors.yellow,
+    error: [colors.red, colors.bold]
   }
+})
 
-  return text
-}
+// const fs = require('fs')
+// colors.setTheme({
+//   info: ['blue'],
+//   warn: ['yellow'],
+//   error: ['red'],
+//   debug: ['white'],
+//   event: ['green']
+// })
 
-const appendLogFile = (logType, text) => {
-  const filename = `${moment().format('DD-MM-YY')}.log`
-  const filePath = path.join(appDir, 'Logs', logType, filename)
-
-  const time = moment().format('HH:mm:ss')
-  const log = `~${time}:\n${text}\n`
-
-  fs.appendFile(filePath, log, err => {
-    if (err) console.error('can`t put log \n', err)
-  })
-}
+const logger = {}
 
 logger.info = (...args) => {
-  const text = getString(args)
-
-  console.log(colors.info(text))
-
-  appendLogFile('out', text)
+  consoleLogger.info(...args)
+  fileLogger.info(...args)
 }
 
 logger.warn = (...args) => {
-  const text = getString(args)
-  const msg = `[WARN]: ${text}`
-
-  console.warn(colors.warn(msg))
-
-  appendLogFile('out', msg)
+  consoleLogger.warn(...args)
+  fileLogger.warn(...args)
 }
 
 logger.error = (...args) => {
-  const text = getString(args)
-  const msg = `[ERROR]: ${text}`
-
-  console.error(colors.error(msg))
-
-  appendLogFile('error', msg)
-  appendLogFile('out', msg)
+  consoleLogger.error(...args)
+  fileLogger.error(...args)
 }
 
 logger.debug = (...args) => {
-  const text = getString(args)
-  const msg = `[DEBUG]: ${text}`
-
-  console.log(colors.debug(msg))
-
-  appendLogFile('out', msg)
+  consoleLogger.debug(...args)
+  fileLogger.debug(...args)
 }
 
 logger.event = (...args) => {
-  const text = getString(args)
-
-  console.log(colors.event(text))
-
-  appendLogFile('out', text)
+  consoleLogger.event(...args)
+  fileLogger.log(...args)
 }
 
 logger.logStart = () => {
@@ -107,3 +75,39 @@ logger.logEnd = () => {
 }
 
 global.logger = logger
+
+// const getString = rows => {
+//   let text = ``
+
+//   for (let i = 0; i < rows.length; i++) {
+//     try {
+//       const row = rows[i]
+
+//       if (_.isObject(row)) {
+//         text += JSON.stringify(row) + ' '
+
+//         if (row.stack) {
+//           text += `${row.stack} `
+//         }
+//       } else {
+//         text += row.toString() + ` `
+//       }
+//     } catch (err) {
+//       console.log('[ERROR]: logger \n', err)
+//     }
+//   }
+
+//   return text
+// }
+
+// const appendLogFile = (logType, text) => {
+//   const filename = `${moment().format('DD-MM-YY')}.log`
+//   const filePath = path.join(appDir, 'Logs', logType, filename)
+
+//   const time = moment().format('HH:mm:ss')
+//   const log = `~${time}:\n${text}\n`
+
+//   fs.appendFile(filePath, log, err => {
+//     if (err) console.error('can`t put log \n', err)
+//   })
+// }
