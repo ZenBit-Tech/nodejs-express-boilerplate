@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const _ = require('lodash')
-const passwordLib = require('../../Libs/password.lib')
+const passwordLib = require('../Libs/password.lib')
 
 const hiddenUserFields = ['password']
 

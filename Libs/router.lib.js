@@ -2,6 +2,8 @@ const _ = require('lodash')
 const path = require('path')
 const cron = require('cron')
 
+const validationMiddleware = require('../Middlewares/validation.middleware')
+
 const setupRoutes = (app, routes) => {
   const appDir = path.dirname(require.main.filename)
 
@@ -16,17 +18,33 @@ const setupRoutes = (app, routes) => {
     const route = routes[key]
 
     try {
-      const { events, handler, middleware } = route
+      const { events, handler: handlerPath, middleware } = route
 
       const additionalProps = []
 
-      if (_.isString(handler)) {
-        const handlerPath = path.join(appDir, handler)
-        const handlerFunc = require(handlerPath)
+      if (_.isString(handlerPath)) {
+        const routeHandlerFullPath = path.join(appDir, handlerPath)
+        const routeHandlerData = require(routeHandlerFullPath)
+
+        const handlerFunc = routeHandlerData.handler
+
+        const handlerValidationData = routeHandlerData.validation
+        const handlerMiddleware = routeHandlerData.middleware
+
+        if (_.isArray(handlerMiddleware)) {
+          additionalProps.concat(handlerMiddleware)
+        }
+
+        if (handlerValidationData) {
+          const routeValidationMiddleware = (req, res, next) =>
+            validationMiddleware(req, res, next, handlerValidationData)
+
+          additionalProps.push(routeValidationMiddleware)
+        }
 
         additionalProps.push(handlerFunc)
       } else if (_.isFunction(handler)) {
-        additionalProps.push(handler)
+        additionalProps.push(handlerPath)
       }
 
       if (_.isObject(events.http)) {
@@ -37,7 +55,7 @@ const setupRoutes = (app, routes) => {
         routesAvaliable.push({
           function: key,
           method: events.http.method.toUpperCase(),
-          path: events.http.path
+          path: events.http.path,
         })
       }
 
@@ -52,7 +70,7 @@ const setupRoutes = (app, routes) => {
         routesAvaliable.push({
           function: key,
           method: 'SHEDULE',
-          path: rate
+          path: rate,
         })
       }
     } catch (error) {

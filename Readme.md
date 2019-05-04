@@ -1,18 +1,3 @@
-# Node.js express server template
-
-## Features
-
-* Cron
-* Bearer Token Authentication
-* OAuth 2.0
-  * Google
-  * LinkedIn
-  * Twitter
-  * Facebook
-* MongoDB
-* Sequlize
-* Input Validation
-
 ## Using
 
 ### Install
@@ -59,4 +44,19 @@ Cron rate string structure
 second ( optional )
 ```
 
-@ DomIn3339 2018
+### Handler file exports
+
+File by path in `handler` field should export `handler` function.
+
+For validation on this route you can export object called `validation`, e.g.
+```JS
+  module.exports.validation = {
+    validationSchema, // some yup validation schema
+    requestField: 'some.request.field', // path to field to validate, default 'body'
+    preprocessFunc: (filedValue) => fieldValue // some func to process body before validation, should return next field value
+  }
+```
+
+Also you can export `middleware` - array of middlewares for the route. This middlewares will be invoked after middlewares in `routes.js` file.
+
+@ DomIn3339 2019

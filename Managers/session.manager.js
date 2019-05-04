@@ -1,4 +1,4 @@
-const { Session } = require('../DB').default
+const Session = require('../Models/Session.model')
 
 const JWT = require('jsonwebtoken')
 const moment = require('moment')
@@ -8,29 +8,29 @@ const {
   TOKEN_SECRET,
   TOKEN_EXPIRES,
   REFRESH_TOKEN_SECRET,
-  REFRESH_TOKEN_EXPIRES
+  REFRESH_TOKEN_EXPIRES,
 } = process.env
 
 const tokenConfig = {
   secret: TOKEN_SECRET,
-  expires: TOKEN_EXPIRES
+  expires: TOKEN_EXPIRES,
 }
 
 const refreshTokenConfig = {
   secret: REFRESH_TOKEN_SECRET,
-  expires: REFRESH_TOKEN_EXPIRES
+  expires: REFRESH_TOKEN_EXPIRES,
 }
 
 // const redisClient = redis.createClient
 global.refreshTokens = {}
 
 class SessionManager {
-  static async createToken(user) {
+  async createToken(user) {
     try {
       let config = tokenConfig
 
       const token = JWT.sign({ user: user._id }, config.secret, {
-        expiresIn: config.expires
+        expiresIn: config.expires,
       })
 
       const expiredDate = moment()
@@ -43,7 +43,7 @@ class SessionManager {
     }
   }
 
-  static async createRefreshToken(session) {
+  async createRefreshToken(session) {
     try {
       let config = refreshTokenConfig
 
@@ -55,14 +55,14 @@ class SessionManager {
     }
   }
 
-  static async createSession(user) {
+  async createSession(user) {
     try {
       const { token, expiredDate } = await this.createToken(user)
 
       const session = new Session({
         userId: user._id,
         expiredDate,
-        token
+        token,
       })
 
       session.save()
@@ -76,7 +76,7 @@ class SessionManager {
     }
   }
 
-  static async restoreSession(sessionId) {
+  async restoreSession(sessionId) {
     try {
       await Session.findByIdAndRemove(sessionId)
     } catch (err) {
@@ -86,7 +86,7 @@ class SessionManager {
     // delete refresh token from redis
   }
 
-  static async checkToken(token) {
+  async checkToken(token) {
     try {
       const decoded = await JWT.verify(token, config.secret)
 
@@ -96,11 +96,11 @@ class SessionManager {
     }
   }
 
-  static async checkRefreshToken(token) {
+  async checkRefreshToken(token) {
     try {
       const decoded = await JWT.verify(token, config.secret)
       const savedToken = await RefreshTokensManager.getRefreshTokenBySessionId(
-        decoded.session
+        decoded.session,
       )
 
       if (savedToken !== token) return { error: 'Invalid token' }
@@ -111,7 +111,7 @@ class SessionManager {
     }
   }
 
-  static async updateToken() {
+  async updateToken() {
     try {
       // const session = refreshToken
     } catch (err) {
@@ -121,7 +121,7 @@ class SessionManager {
 }
 
 class RefreshTokensManager {
-  static async saveRefreshToken(token, sessionId) {
+  async saveRefreshToken(token, sessionId) {
     try {
       global.refreshTokens[sessionId] = token
     } catch (err) {
@@ -129,7 +129,7 @@ class RefreshTokensManager {
     }
   }
 
-  static async getRefreshTokenBySessionId(sessionId) {
+  async getRefreshTokenBySessionId(sessionId) {
     try {
       return global.refreshTokens[sessionId]
     } catch (err) {
@@ -138,4 +138,5 @@ class RefreshTokensManager {
   }
 }
 
-module.exports = SessionManager
+module.exports = new SessionManager()
+module.exports.SessionManager = SessionManager

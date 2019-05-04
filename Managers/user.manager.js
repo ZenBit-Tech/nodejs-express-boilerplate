@@ -1,7 +1,7 @@
-const { User } = require('../DB').default
+const User = require('../Models/User.model')
 
 class UserManager {
-  static async findByEmail(email) {
+  async findByEmail(email) {
     try {
       const user = await User.findOne({ email })
 
@@ -11,7 +11,7 @@ class UserManager {
     }
   }
 
-  static async createUser(newUserData) {
+  async createUser(newUserData) {
     try {
       const newUser = new User(newUserData)
 
@@ -28,7 +28,7 @@ class UserManager {
     }
   }
 
-  static async updateUser(userId, update, returnNew = true) {
+  async updateUser(userId, update, returnNew = true) {
     try {
       const nextUser = User.findByIdAndUpdate(userId, update, {
         new: returnNew,
@@ -40,7 +40,7 @@ class UserManager {
     }
   }
 
-  static async deleteUser(userId) {
+  async deleteUser(userId) {
     try {
       await User.findByIdAndRemove(userId)
     } catch (err) {
@@ -48,7 +48,7 @@ class UserManager {
     }
   }
 
-  static async findOne(params) {
+  async findOne(params) {
     try {
       return await User.findOne(params)
     } catch (err) {
@@ -56,7 +56,7 @@ class UserManager {
     }
   }
 
-  static async findById(id) {
+  async findById(id) {
     try {
       return await User.findById(id)
     } catch (err) {
@@ -65,4 +65,5 @@ class UserManager {
   }
 }
 
-module.exports = UserManager
+module.exports = new UserManager()
+module.exports.UserManager = UserManager

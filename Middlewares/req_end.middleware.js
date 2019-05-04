@@ -1,4 +1,4 @@
-const endMiddleware = (request, response, next) => {
+const endMiddleware = () => {
   logger.logEnd();
 };
 

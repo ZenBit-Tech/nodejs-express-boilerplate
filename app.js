@@ -3,10 +3,10 @@ require('./Libs/logger.lib')
 require('./Libs/passport')
 
 const express = require('express')
-const session = require('express-session')
+// const session = require('express-session')
 const configs = require('./Config/server')
 
-const { createConnection } = require('./DB').default
+const { createDBConnection } = require('./DB').mongodb
 
 const { setupRoutes } = require('./Libs/router.lib')
 const routes = require('./routes')
@@ -31,15 +31,15 @@ app.use(
 )
 app.use(corsMiddleware)
 app.use(reqStartMiddleware)
-app.use(session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
-}))
+// app.use(session({
+//   secret: 'keyboard cat',
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: { secure: true }
+// }))
 
 // connection to the database
-createConnection()
+createDBConnection()
 
 // server start
 server.listen(configs.http.port, () => {

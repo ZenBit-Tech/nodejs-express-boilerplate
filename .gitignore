@@ -1,8 +1,11 @@
 # Logs
-/Logs/
+/Logs/*
 
 # Modules
 /node_modules
 package-lock.json
 
 .history/
+
+.env
+.env.local

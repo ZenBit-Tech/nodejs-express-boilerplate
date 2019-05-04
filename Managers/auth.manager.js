@@ -4,64 +4,66 @@ const SessionManager = require('./session.manager')
 const _ = require('lodash')
 
 class AuthManager {
-  static async loginWithEmailPassword(email, password, done) {
-    try {
-      const user = await UserManager.findByEmail(email)
+  async loginWithEmailPassword(email, password) {
+    const user = await UserManager.findByEmail(email)
 
-      if (!user)
-        return done(400, {
-          message: 'User doesn`t exist',
-          userMessage: 'Such user doesn`t exist'
-        })
+    logger.debug(user)
 
-      if (user.password === '' && user.registrationType !== 'local') {
-        return done(400, {
-          message: 'Sign in with social',
-          userMessage: 'Sign in with ' + _.capitalize(user.registrationType)
-        })
+    if (!user) {
+      throw {
+        code: 'UserDoesntExist',
+        message: 'User doesn`t exist',
+        userMessage: 'Such user doesn`t exist',
       }
+    }
 
-      if (!user.comparePassword(password))
-        return done(400, {
-          message: 'Invalid password',
-          userMessage: 'Invalid password'
-        })
+    if (user.password === '' && user.registrationType !== 'local') {
+      throw {
+        code: 'SocialSignIn',
+        message: 'Sign in with social',
+        userMessage: 'Sign in with ' + _.capitalize(user.registrationType),
+      }
+    }
 
-      const { session, refreshToken } = await SessionManager.createSession(user)
+    if (!user.comparePassword(password)) {
+      throw {
+        code: 'InvalidPassword',
+        message: 'Invalid password',
+        userMessage: 'Invalid password',
+      }
+    }
 
-      done(200, {
-        user: user.omitFields(),
-        session: session.lean(),
-        refreshToken
-      })
-    } catch (err) {
-      throw Error(err)
+    // const { session, refreshToken } = await SessionManager.createSession(
+    //   newUser,
+    // )
+
+    return {
+      user: user.omitFields(),
+      // session: session,
     }
   }
 
-  static async registerByEmailPassword(newUserData, done) {
-    try {
-      const newUser = await UserManager.createUser(newUserData)
+  async registerByEmailPassword(newUserData) {
+    const newUser = await UserManager.createUser(newUserData)
 
-      if (newUser.error) {
-        done(400, { error: newUser.error })
-
-        return
+    if (newUser.error) {
+      throw {
+        code: newUser.error,
+        message: '',
+        userMessage: '',
       }
+    }
 
-      const { session, refreshToken } = await SessionManager.createSession(
-        newUser
-      )
+    // const { session, refreshToken } = await SessionManager.createSession(
+    //   newUser,
+    // )
 
-      done(200, {
-        user: newUser.omitFields(),
-        session: session,
-        refreshToken
-      })
-    } catch (err) {
-      throw Error(err)
+    return {
+      user: newUser.omitFields(),
+      // session: session,
     }
   }
 }
 
-module.exports = AuthManager
+module.exports = new AuthManager()
+module.exports.AuthManager = AuthManager
